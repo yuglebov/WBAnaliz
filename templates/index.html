@@ -11,7 +11,7 @@
     {% if not current_user.is_authenticated %}
     <div class="position-absolute top-50 start-50 translate-middle">
         <p>Авторизуйтесь через телеграм</p>
-        <script async src="https://telegram.org/js/telegram-widget.js?16" data-telegram-login="{{ TELEGRAM_BOT_NAME }}" data-auth-url="{{ TELEGRAM_BOT_URL }}/login"></script>
+        <script async src="https://telegram.org/js/telegram-widget.js?16" data-telegram-login="{{ telegram_bot_name }}" data-auth-url="{{ telegram_url }}/login"></script>
     </div>
     {% endif %}
 

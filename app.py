@@ -14,7 +14,7 @@ from html_functs import generate_report, save_report_data, is_float
 
 load_dotenv()  # Загружаем переменные окружения из .env файла
 
-TELEGRAM_BOT_NAME = os.environ.get('TELEGRAM_BOT')
+TELEGRAM_BOT_NAME = os.environ.get('TELEGRAM_BOT_NAME')
 TELEGRAM_BOT_URL = os.environ.get('TELEGRAM_URL')
 
 # Создаем экземпляр приложения Flask
@@ -72,7 +72,8 @@ def load_user(user_id):
 @app.route('/')
 def index():
     if not current_user.is_authenticated:
-        return render_template('index.html')
+        return render_template('index.html', telegram_bot_name=TELEGRAM_BOT_NAME,
+                               telegram_url=TELEGRAM_BOT_URL)
     else:
         user = User.query.filter_by(id=current_user.id).first()
         total = {'Payout': 0, 'CustomCalculation': 0, 'StorageFee': 0,
@@ -101,7 +102,7 @@ def index():
         app.jinja_env.filters['round2'] = round_float
         return render_template('index.html', user=user, start_date=start_date,
                                end_date=end_date, api_key=api_key, product_data=product_data,
-                               report_data=report_data, total=total, telegram_bot=TELEGRAM_BOT_NAME,
+                               report_data=report_data, total=total, telegram_bot_name=TELEGRAM_BOT_NAME,
                                telegram_url=TELEGRAM_BOT_URL)
 
 
