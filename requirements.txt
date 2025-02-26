@@ -1,0 +1,5 @@
+requests
+Flask
+Flask-Login
+Jinja2
+python-dotenv
