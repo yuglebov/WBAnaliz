@@ -3,3 +3,4 @@ Flask
 Flask-Login
 Jinja2
 python-dotenv
+flask_sqlalchemy
