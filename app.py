@@ -79,8 +79,8 @@ def index():
         total = {'Payout': 0, 'CustomCalculation': 0, 'StorageFee': 0,
                  'Penalty': 0, 'Ad': 0, 'Deduction': 0, 'Other': 0}
         if user:
-            start_date = user.start_date.strftime("%Y-%m-%d")
-            end_date = user.end_date.strftime("%Y-%m-%d")
+            start_date = user.start_date.strftime("%Y-%m-%d") if user.start_date else ''
+            end_date = user.end_date.strftime("%Y-%m-%d") if user.end_date else ''
             api_key = user.api_key
             products = Product.query.filter_by(user_id=user.id).all()
             product_data = "\n".join([f"{product.article},{product.price}" for product in products])
