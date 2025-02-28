@@ -18,7 +18,7 @@ class User(UserMixin, db.Model):
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    article = db.Column(db.String(64), unique=True)
+    article = db.Column(db.String(64))
     price = db.Column(db.Float)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
