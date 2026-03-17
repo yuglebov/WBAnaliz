@@ -2,12 +2,12 @@
 Веб-приложение для анализа статистики продаж Wildberries через Telegram-авторизацию.
 """
 
+import os
 import hashlib
 import hmac
 import requests
-import os
 #from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 #from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 #from jinja2 import Template
@@ -78,37 +78,36 @@ def index():
     if not current_user.is_authenticated:
         return render_template('index.html', telegram_bot_name=TELEGRAM_BOT_NAME,
                                telegram_url=TELEGRAM_BOT_URL)
+    user = User.query.filter_by(id=current_user.id).first()
+    total = {'Payout': 0, 'CustomCalculation': 0, 'StorageFee': 0,
+             'Penalty': 0, 'Ad': 0, 'Deduction': 0, 'Other': 0}
+    if user:
+        start_date = user.start_date.strftime("%Y-%m-%d") if user.start_date else ''
+        end_date = user.end_date.strftime("%Y-%m-%d") if user.end_date else ''
+        api_key = user.api_key
+        products = Product.query.filter_by(user_id=user.id).all()
+        product_data = "\n".join([f"{product.article},{product.price}" for product in products])
+        report_data = ReportData.query.filter_by(user_id=user.id).all()
+        for data in report_data:
+            total['Payout'] += data.custom_payout
+            total['CustomCalculation'] += data.custom_calculation
+            total['StorageFee'] += data.storage_fee
+            total['Penalty'] += data.penalty
+            total['Ad'] += data.ad
+            total['Deduction'] += data.deduction
+            total['Other'] += data.other
     else:
-        user = User.query.filter_by(id=current_user.id).first()
-        total = {'Payout': 0, 'CustomCalculation': 0, 'StorageFee': 0,
-                 'Penalty': 0, 'Ad': 0, 'Deduction': 0, 'Other': 0}
-        if user:
-            start_date = user.start_date.strftime("%Y-%m-%d") if user.start_date else ''
-            end_date = user.end_date.strftime("%Y-%m-%d") if user.end_date else ''
-            api_key = user.api_key
-            products = Product.query.filter_by(user_id=user.id).all()
-            product_data = "\n".join([f"{product.article},{product.price}" for product in products])
-            report_data = ReportData.query.filter_by(user_id=user.id).all()
-            for data in report_data:
-                total['Payout'] += data.custom_payout
-                total['CustomCalculation'] += data.custom_calculation
-                total['StorageFee'] += data.storage_fee
-                total['Penalty'] += data.penalty
-                total['Ad'] += data.ad
-                total['Deduction'] += data.deduction
-                total['Other'] += data.other
-        else:
-            start_date = ""
-            end_date = ""
-            api_key = ""
-            product_data = ""
-            report_data = []
-        app.jinja_env.filters['round2'] = round_float
-        return render_template('index.html', user=user, start_date=start_date,
-                               end_date=end_date, api_key=api_key, product_data=product_data,
-                               report_data=report_data, total=total,
-                               telegram_bot_name=TELEGRAM_BOT_NAME,
-                               telegram_url=TELEGRAM_BOT_URL)
+        start_date = ""
+        end_date = ""
+        api_key = ""
+        product_data = ""
+        report_data = []
+    app.jinja_env.filters['round2'] = round_float
+    return render_template('index.html', user=user, start_date=start_date,
+                           end_date=end_date, api_key=api_key, product_data=product_data,
+                           report_data=report_data, total=total,
+                           telegram_bot_name=TELEGRAM_BOT_NAME,
+                           telegram_url=TELEGRAM_BOT_URL)
 
 
 @app.route('/login', methods=['GET'])
@@ -143,8 +142,7 @@ def login():
             db.session.commit()
         login_user(user)
         return redirect(url_for('index'))
-    else:
-        return render_template('index.html')
+    return render_template('index.html')
 
 
 @app.route('/logout')
