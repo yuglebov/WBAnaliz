@@ -1,3 +1,14 @@
+"""
+Модуль содержит модели базы данных для приложения анализа продаж Wildberries.
+
+Описание моделей:
+- User: хранит данные пользователя, авторизованного через Telegram.
+- Product: хранит артикулы и цены товаров, отслеживаемых пользователем.
+- ReportData: хранит агрегированные финансовые метрики по продажам.
+
+Используется SQLAlchemy ORM и Flask-Login для интеграции с Flask.
+"""
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
@@ -60,3 +71,5 @@ class ReportData(db.Model):
     custom_payout = db.Column(db.Float)
     roi = db.Column(db.Float)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+# pylint: disable=too-few-public-methods

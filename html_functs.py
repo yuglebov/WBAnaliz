@@ -1,7 +1,17 @@
-from models import db, User, Product, ReportData
+"""
+Модуль для обработки данных отчётов Wildberries.
+
+Функции:
+- generate_report: преобразует сырые данные API в агрегированную статистику по товарам.
+- save_report_data: сохраняет рассчитанные метрики в базу данных.
+- is_float: проверяет, можно ли строку преобразовать в число.
+"""
+
+from models import db, ReportData
 
 
 def is_float(s):
+    """Проверяет, можно ли преобразовать строку в число."""
     try:
         float(s)
         return True
@@ -9,15 +19,23 @@ def is_float(s):
         return False
 
 # Generate report
-def generate_report(data, cost_prices):
+def generate_report(data, cost_prices): # pylint: disable=too-many-branches
+    """
+    Генерирует отчёт по продажам на основе данных от Wildberries API.
+
+    :param data: список операций от API Wildberries.
+    :param cost_prices: словарь {артикул: себестоимость}.
+    :return: агрегированные данные по каждому товару.
+    """
     report_data = {}
     tax_rate = 0.06
 
     for item in data:
         sa_name = item.get('sa_name')
-        if not sa_name or sa_name not in cost_prices.keys():
-            continue
-        if sa_name not in report_data.keys():
+        if not sa_name or sa_name not in cost_prices:
+            continue # Пропускаем товары без себестоимости
+        # Инициализация записи, если ещё не существует
+        if sa_name not in report_data:
             report_data[sa_name] = {
                 'logistics_count': 0,
                 'logistics_sum': 0,
@@ -75,19 +93,30 @@ def generate_report(data, cost_prices):
             else:
                 report_data[sa_name]['deduction'] += item['deduction'] or 0
 
-        elif item['supplier_oper_name'] == 'Возмещение издержек по перевозке/по складским операциям с товаром':
+        elif item['supplier_oper_name'] == ('Возмещение издержек по перевозке'
+                                            '/по складским операциям с товаром'):
             report_data[sa_name]['other'] += item['rebill_logistic_cost'] or 0
 
     return report_data
 
 def save_report_data(report_data, cost_prices, user_id):
+    """
+    Сохраняет данные отчёта в базу данных.
+
+    :param report_data: агрегированные данные по товарам.
+    :param cost_prices: словарь себестоимостей.
+    :param user_id: ID пользователя.
+    """
+
     # Delete old data
     ReportData.query.filter(ReportData.user_id == user_id).delete()
     db.session.commit()
     for sa_name, stats in report_data.items():
         cost_price_per_unit = cost_prices.get(sa_name, 0)
-        buyout_percentage = (stats['sales_count'] / (stats['logistics_count'] + stats['return_logistics_count'])) * 100 if stats['logistics_count'] > 0 else 0
-
+        buyout_percentage = (
+            (stats['sales_count'] / (stats['logistics_count'] + stats['return_logistics_count'])) * 100
+            if stats['logistics_count'] > 0 else 0
+        )
         custom_calculation = (
             stats['payout_sum'] -
             stats['logistics_sum'] -
@@ -114,8 +143,9 @@ def save_report_data(report_data, cost_prices, user_id):
             stats['return_sum']
         )
 
-        roi = (custom_calculation / (stats['sales_count'] * cost_price_per_unit)) * 100 if stats['sales_count'] > 0 and cost_price_per_unit > 0 else 0
-
+        roi = ((custom_calculation / (stats['sales_count'] * cost_price_per_unit)) * 100
+            if stats['sales_count'] > 0 and cost_price_per_unit > 0 else 0
+        )
         # Insert new data
         report = ReportData(
             sa_name=sa_name,
