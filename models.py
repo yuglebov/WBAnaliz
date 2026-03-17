@@ -31,6 +31,8 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.telegram_id}>'
 
+    # pylint: disable=too-few-public-methods
+
 
 class Product(db.Model):
     """
@@ -44,6 +46,8 @@ class Product(db.Model):
 
     def __repr__(self):
         return f'<Product {self.article}>'
+
+    # pylint: disable=too-few-public-methods
 
 class ReportData(db.Model):
     """

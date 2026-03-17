@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class Config(object): # pylint: disable=too-few-public-methods
+
+class Config:  # pylint: disable=too-few-public-methods
     """
     Класс конфигурации Flask-приложения.
     Содержит параметры, загружаемые из переменных окружения или используемые по умолчанию.

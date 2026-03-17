@@ -114,7 +114,9 @@ def save_report_data(report_data, cost_prices, user_id):
     for sa_name, stats in report_data.items():
         cost_price_per_unit = cost_prices.get(sa_name, 0)
         buyout_percentage = (
-            (stats['sales_count'] / (stats['logistics_count'] + stats['return_logistics_count'])) * 100
+            (stats['sales_count'] /
+            (stats['logistics_count'] +
+            stats['return_logistics_count'])) * 100
             if stats['logistics_count'] > 0 else 0
         )
         custom_calculation = (
