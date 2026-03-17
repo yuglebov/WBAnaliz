@@ -1,3 +1,7 @@
+"""
+Веб-приложение для анализа статистики продаж Wildberries через Telegram-авторизацию.
+"""
+
 import hashlib
 import hmac
 import requests
@@ -30,17 +34,17 @@ login_manager.login_view = 'index'  # Страница для входа
 login_manager.init_app(app)
 
 # URL для запроса данных
-url = "https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod"
+URL = "https://statistics-api.wildberries.ru/api/v5/supplier/reportDetailByPeriod"
 
 
 def get_api_data(user):
-    apiKey = user.api_key
-    params = {"dateFrom": user.start_date.strftime("%Y-%m-%d"), "dateTo": user.end_date.strftime("%Y-%m-%d")}
-    response = requests.get(url, params=params, headers={"Authorization": apiKey})
+    apikey = user.api_key
+    params = {"dateFrom": user.start_date.strftime("%Y-%m-%d"),
+              "dateTo": user.end_date.strftime("%Y-%m-%d")}
+    response = requests.get(URL, params=params, headers={"Authorization": apikey}, timeout=60)
     if response.status_code == 200:
         return response.json()
-    else:
-        return False
+    return False
 
 # Проверка хеша подлинности
 def check_response(data):
@@ -48,7 +52,7 @@ def check_response(data):
     del d['hash']
     d_list = []
     for key in sorted(d.keys()):
-        if d[key] != None:
+        if d[key] is not None:
             d_list.append(key + '=' + d[key])
     data_string = bytes('\n'.join(d_list), 'utf-8')
     secret_key = hashlib.sha256(app.config['TELEGRAM_BOT_TOKEN'].encode('utf-8')).digest()
@@ -102,7 +106,8 @@ def index():
         app.jinja_env.filters['round2'] = round_float
         return render_template('index.html', user=user, start_date=start_date,
                                end_date=end_date, api_key=api_key, product_data=product_data,
-                               report_data=report_data, total=total, telegram_bot_name=TELEGRAM_BOT_NAME,
+                               report_data=report_data, total=total,
+                               telegram_bot_name=TELEGRAM_BOT_NAME,
                                telegram_url=TELEGRAM_BOT_URL)
 
 
@@ -127,7 +132,9 @@ def login():
 
         user = User.query.filter_by(telegram_id=str(telegram_id)).first()
         if user is None:
-            user = User(telegram_id=str(telegram_id), username=data['username'], first_name=data['first_name'])
+            user = User(telegram_id=str(telegram_id),
+                        username=data['username'],
+                        first_name=data['first_name'])
             db.session.add(user)
             db.session.commit()
         else:
@@ -207,6 +214,7 @@ def update_report():
     save_report_data(report_data, cost_prices, current_user.id) # Сохраняем данные в БД
     flash('Данные обновлены')
     return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     with app.app_context():
