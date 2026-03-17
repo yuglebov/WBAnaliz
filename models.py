@@ -1,9 +1,14 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
+# Инициализация объекта SQLAlchemy для работы с базой данных
 db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
+    """
+    Модель пользователя, хранит основную информацию о пользователе,
+    включая его данные из Telegram и настройки аккаунта.
+    """
     id = db.Column(db.Integer, primary_key=True)
     telegram_id = db.Column(db.String(32), unique=True)
     username = db.Column(db.String(32))
@@ -17,6 +22,10 @@ class User(UserMixin, db.Model):
 
 
 class Product(db.Model):
+    """
+    Модель товара, привязанного к пользователю.
+    Позволяет отслеживать артикулы и цены товаров для конкретного пользователя.
+    """
     id = db.Column(db.Integer, primary_key=True)
     article = db.Column(db.String(64))
     price = db.Column(db.Float)
@@ -26,6 +35,10 @@ class Product(db.Model):
         return f'<Product {self.article}>'
 
 class ReportData(db.Model):
+    """
+    Модель для хранения данных отчётов по продажам.
+    Содержит финансовую и статистическую информацию за определённый период.
+    """
     id = db.Column(db.Integer, primary_key=True)
     sa_name = db.Column(db.String(120))
     logistics_count = db.Column(db.Integer)
